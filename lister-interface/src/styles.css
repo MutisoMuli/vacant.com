@@ -1,0 +1,23 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+.bg-orange {
+    background-color: #FFA500;
+  }
+  
+  .text-orange {
+    color: #FFA500;
+  }
+  
+  .border-orange {
+    border-color: #FFA500;
+  }
+  
+  .text-navy-blue {
+    color: #00134C;
+  }
+  
+  .bg-navy-blue {
+    background-color: #00134C;
+  }

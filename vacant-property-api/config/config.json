@@ -1,0 +1,23 @@
+{
+  "development": {
+    "username": "postgres",
+    "password": "52605260",
+    "database": "vacant_crud",
+    "host": "127.0.0.1",
+    "dialect": "postgres"
+  },
+  "test": {
+    "username": "postgres",
+    "password": "52605260",
+    "database": "vacant_crud",
+    "host": "127.0.0.1",
+    "dialect": "postgres"
+  },
+  "production": {
+    "username": "postgres",
+    "password": "52605260",
+    "database": "vacant_crud",
+    "host": "127.0.0.1",
+    "dialect": "postgres"
+  }
+}
