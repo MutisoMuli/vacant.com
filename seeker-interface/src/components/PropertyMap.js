@@ -53,16 +53,17 @@ function PropertyMap() {
   };
 
   return (
-    <div>
-      <h2>Find Nearby Properties</h2>
-      <div>
-        <label>Search Radius (km): </label>
+    <div className="text-navy-blue">
+      <h2 className="text-navy-blue">Find Nearby Properties</h2>
+      <div className="mb-4">
+        <label className="text-navy-blue">Search Radius (km): </label>
         <input
           type="range"
           min="1"
           max="50"
           value={radius}
           onChange={handleRadiusChange}
+          className="accent-navy-600"
         />
         <span>{radius} km</span>
       </div>
@@ -93,11 +94,13 @@ function PropertyMap() {
           ))}
         </GoogleMap>
       </LoadScript>
-      <div>
-        <h3>Nearby Properties:</h3>
+      <div className="mt-4">
+        <h3 className="text-navy-blue">Nearby Properties:</h3>
         <ul>
           {properties.map((property) => (
-            <li key={property.id}>{property.address} - {property.propertyType}</li>
+            <li key={property.id} className="text-navy-blue">
+              {property.address} - {property.propertyType}
+            </li>
           ))}
         </ul>
       </div>

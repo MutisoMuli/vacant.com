@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 const Header = () => (
-  <nav className="bg-white border-b border-orange" style={{ height: '72px' }}>
+  <nav className="bg-white border-b border-orange" style={{ height: '100px' }}>
     <div className="container mx-auto flex justify-between items-center h-full">
       <Link to="/" className="flex items-center">
         <img

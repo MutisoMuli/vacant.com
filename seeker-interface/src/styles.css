@@ -1,0 +1,75 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Define custom classes within a @layer directive */
+@layer utilities {
+  .bg-orange {
+    background-color: #FFA500;
+  }
+
+  .text-orange {
+    color: #FFA500;
+  }
+
+  .border-orange {
+    border-color: #FFA500;
+  }
+
+  .text-navy-blue {
+    color: #00134C;
+  }
+
+  .bg-navy-blue {
+    background-color: #00134C;
+  }
+}
+
+/* Additional Styles */
+
+/* Header */
+header {
+  @apply bg-white shadow-md;
+}
+
+header .container {
+  @apply flex justify-between items-center px-4 py-2;
+}
+
+header img {
+  @apply h-12 w-auto;
+}
+
+header nav a {
+  @apply text-navy-blue hover:text-orange font-bold;
+}
+
+header button {
+  @apply bg-navy-blue text-white px-4 py-2 rounded hover:bg-orange transition-colors;
+}
+
+/* Body */
+main {
+  @apply flex-grow container mx-auto px-4 py-8;
+}
+
+main h1 {
+  @apply text-3xl font-bold text-navy-blue mb-4;
+}
+
+main p {
+  @apply text-xl text-gray-600 mb-8;
+}
+
+main .map-placeholder {
+  @apply bg-gray-300 h-48 w-full mb-8 flex items-center justify-center text-gray-600;
+}
+
+/* Footer */
+footer {
+  @apply bg-gray-800 text-white py-4;
+}
+
+footer p {
+  @apply text-center;
+}
