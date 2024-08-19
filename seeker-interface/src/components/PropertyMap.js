@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { GoogleMap, LoadScript, Marker, Circle } from '@react-google-maps/api';
+import Map, { Marker, NavigationControl, ScaleControl, GeolocateControl } from 'react-map-gl';
 import axios from 'axios';
 
 const containerStyle = {
@@ -8,7 +8,11 @@ const containerStyle = {
 };
 
 function PropertyMap() {
-  const [center, setCenter] = useState({ lat: 0, lng: 0 });
+  const [viewport, setViewport] = useState({
+    latitude: 0,
+    longitude: 0,
+    zoom: 11
+  });
   const [properties, setProperties] = useState([]);
   const [radius, setRadius] = useState(5); // Default 5km radius
 
@@ -18,10 +22,14 @@ function PropertyMap() {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const userLocation = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
           };
-          setCenter(userLocation);
+          setViewport((prev) => ({
+            ...prev,
+            latitude: userLocation.latitude,
+            longitude: userLocation.longitude
+          }));
           fetchProperties(userLocation);
         },
         (error) => {
@@ -35,8 +43,8 @@ function PropertyMap() {
     try {
       const response = await axios.get('/api/seeker/nearby-properties', {
         params: {
-          latitude: location.lat,
-          longitude: location.lng,
+          latitude: location.latitude,
+          longitude: location.longitude,
           radius: radius
         }
       });
@@ -49,7 +57,7 @@ function PropertyMap() {
   const handleRadiusChange = (e) => {
     const newRadius = parseInt(e.target.value);
     setRadius(newRadius);
-    fetchProperties(center);
+    fetchProperties(viewport);
   };
 
   return (
@@ -67,33 +75,28 @@ function PropertyMap() {
         />
         <span>{radius} km</span>
       </div>
-      <LoadScript googleMapsApiKey="YOUR_GOOGLE_MAPS_API_KEY">
-        <GoogleMap
-          mapContainerStyle={containerStyle}
-          center={center}
-          zoom={11}
-        >
-          <Marker position={center} />
-          <Circle
-            center={center}
-            radius={radius * 1000} // Convert km to meters
-            options={{
-              fillColor: 'lightblue',
-              fillOpacity: 0.3,
-              strokeColor: 'blue',
-              strokeOpacity: 0.8,
-              strokeWeight: 2,
-            }}
+      <Map
+        {...viewport}
+        style={containerStyle}
+        mapboxAccessToken="pk.eyJ1IjoiYW50b211bGkiLCJhIjoiY2x6djVkeHloMDN6NTJtczJzejZwYml1ciJ9.AXoIJyK2JC9PoSKgZOPTkA"
+        onMove={(evt) => setViewport(evt.viewState)}
+        mapStyle="mapbox://styles/mapbox/streets-v11"
+      >
+        <NavigationControl />
+        <ScaleControl />
+        <GeolocateControl />
+
+        <Marker latitude={viewport.latitude} longitude={viewport.longitude} color="red" />
+
+        {properties.map((property) => (
+          <Marker
+            key={property.id}
+            latitude={property.latitude}
+            longitude={property.longitude}
+            color="blue"
           />
-          {properties.map((property) => (
-            <Marker
-              key={property.id}
-              position={{ lat: property.latitude, lng: property.longitude }}
-              title={property.address}
-            />
-          ))}
-        </GoogleMap>
-      </LoadScript>
+        ))}
+      </Map>
       <div className="mt-4">
         <h3 className="text-navy-blue">Nearby Properties:</h3>
         <ul>

@@ -1,20 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+import Map, { Marker, NavigationControl, GeolocateControl } from 'react-map-gl';
 import { Card, CardContent } from './ui/card';
 import { CardHeader } from './ui/card-header';
 import { Input } from './ui/input';
 import { Checkbox } from './ui/checkbox';
 import { Button } from './ui/button';
-import { Camera } from 'lucide-react';
+import { Camera, MapPin, Trash2 } from 'lucide-react';
+import { geocodeReverse } from './geocodeReverse';
 
 const containerStyle = {
   width: '100%',
   height: '400px',
 };
 
-const center = {
-  lat: -3.745,
-  lng: -38.523,
+const initialCenter = {
+  latitude: -3.745,
+  longitude: -38.523,
 };
 
 const PropertyForm = () => {
@@ -23,51 +24,80 @@ const PropertyForm = () => {
     latitude: '',
     longitude: '',
     propertyType: '',
-    size: '',
-    condition: '',
+    price: '',
+    bedrooms: 1,
+    bathrooms: 1,
     availableStatus: true,
     ownerContact: '',
     images: [],
   });
 
-  const [watchId, setWatchId] = useState(null);
+  const [mapCenter, setMapCenter] = useState(initialCenter);
+  const [locationSet, setLocationSet] = useState(false);
 
-  const startWatchingLocation = () => {
+  useEffect(() => {
     if (navigator.geolocation) {
-      const id = navigator.geolocation.getCurrentPosition(
+      navigator.geolocation.getCurrentPosition(
         (position) => {
           const userLocation = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
           };
-          setFormData(prevData => ({
+          setFormData((prevData) => ({
             ...prevData,
-            latitude: userLocation.lat.toString(),
-            longitude: userLocation.lng.toString()
+            latitude: userLocation.latitude.toString(),
+            longitude: userLocation.longitude.toString(),
           }));
           setMapCenter(userLocation);
         },
         (error) => {
           console.error("Error getting user location:", error);
+          setMapCenter(initialCenter);
         }
       );
-      setWatchId(id);
+    }
+  }, []);
+
+  const handleLocationClick = async () => {
+    if (locationSet) {
+      setFormData((prevData) => ({
+        ...prevData,
+        address: '',
+        latitude: '',
+        longitude: '',
+      }));
+      setLocationSet(false);
+    } else {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(async (position) => {
+          const userLocation = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          };
+          const address = await geocodeReverse(userLocation.latitude, userLocation.longitude);
+          setFormData((prevData) => ({
+            ...prevData,
+            address: address,
+            latitude: userLocation.latitude.toString(),
+            longitude: userLocation.longitude.toString(),
+          }));
+          setMapCenter(userLocation);
+          setLocationSet(true);
+        });
+      }
     }
   };
 
-  useEffect(() => {
-    startWatchingLocation();
-    return () => {
-      if (watchId !== null) {
-        navigator.geolocation.clearWatch(watchId);
-      }
-    };
-  }, []);
-
-  const [mapCenter, setMapCenter] = useState(center);
-
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (name === "price") {
+      const formattedValue = value.replace(/\D/g, "");
+      const withCommas = formattedValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      setFormData({ ...formData, [name]: withCommas });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const handleImageUpload = (e) => {
@@ -75,22 +105,23 @@ const PropertyForm = () => {
     setFormData({ ...formData, images: [...formData.images, ...files] });
   };
 
-  const handleMapClick = (e) => {
+  const handleMapClick = (event) => {
+    const { lngLat } = event;
     setFormData({
       ...formData,
-      latitude: e.latLng.lat(),
-      longitude: e.latLng.lng(),
+      latitude: lngLat.lat.toString(),
+      longitude: lngLat.lng.toString(),
     });
-    setMapCenter({ lat: e.latLng.lat(), lng: e.latLng.lng() });
+    setMapCenter({ latitude: lngLat.lat, longitude: lngLat.lng });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const data = new FormData();
-      Object.keys(formData).forEach(key => {
+      Object.keys(formData).forEach((key) => {
         if (key === 'images') {
-          formData.images.forEach(image => data.append('images', image));
+          formData.images.forEach((image) => data.append('images', image));
         } else {
           data.append(key, formData[key]);
         }
@@ -104,13 +135,30 @@ const PropertyForm = () => {
       if (response.ok) {
         const result = await response.json();
         console.log('Property added:', result);
-        // Reset form or show success message
       } else {
         console.error('Error adding property');
       }
     } catch (error) {
       console.error('Error adding property:', error);
     }
+  };
+
+  const handleDelete = () => {
+    // Reset the form data to its initial state
+    setFormData({
+      address: '',
+      latitude: '',
+      longitude: '',
+      propertyType: '',
+      price: '',
+      bedrooms: 1,
+      bathrooms: 1,
+      availableStatus: true,
+      ownerContact: '',
+      images: [],
+    });
+    setMapCenter(initialCenter);
+    setLocationSet(false);
   };
 
   return (
@@ -120,20 +168,139 @@ const PropertyForm = () => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <Input type="text" name="address" value={formData.address} onChange={handleChange} placeholder="Address" />
-          <Input type="text" name="propertyType" value={formData.propertyType} onChange={handleChange} placeholder="Property Type" />
-          <Input type="text" name="size" value={formData.size} onChange={handleChange} placeholder="Size" />
-          <Input type="text" name="condition" value={formData.condition} onChange={handleChange} placeholder="Condition" />
-          <div className="flex items-center">
-            <Checkbox
-              id="availableStatus"
-              checked={formData.availableStatus}
-              onCheckedChange={(checked) => setFormData({ ...formData, availableStatus: checked })}
+          <div className="relative">
+            <Input
+              type="text"
+              name="address"
+              value={formData.address || 'Enter location'}
+              onChange={handleChange}
+              placeholder="Enter location"
+              readOnly
             />
-            <label htmlFor="availableStatus" className="ml-2">Available</label>
+            <MapPin
+              size={24}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer"
+              onClick={handleLocationClick}
+            />
           </div>
-          <Input type="text" name="ownerContact" value={formData.ownerContact} onChange={handleChange} placeholder="Owner Contact" />
-          
+
+          <div>
+            <label htmlFor="propertyType">Property Type</label>
+            <select
+              id="propertyType"
+              name="propertyType"
+              value={formData.propertyType}
+              onChange={handleChange}
+              className="w-full p-2 border border-gray-300 rounded"
+            >
+              <option value="">Select Property Type</option>
+              <option value="Apartment">Apartment</option>
+              <option value="House">House</option>
+              <option value="Mansion">Mansion</option>
+              <option value="Airbnb">Airbnb</option>
+              <option value="Subletting">Subletting</option>
+              <option value="Servant quarters">Servant quarters</option>
+              <option value="Office">Office</option>
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="price">Price (in shillings)</label>
+            <Input
+              type="text"
+              id="price"
+              name="price"
+              value={formData.price}
+              onChange={handleChange}
+              placeholder="Enter price in KSH"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="bedrooms">Bedrooms</label>
+            <div className="flex items-center">
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, bedrooms: Math.max(1, (prev.bedrooms || 1) - 1) }))}
+                className="px-3 py-2 border border-gray-300 rounded-l"
+              >
+                -
+              </button>
+              <input
+                type="number"
+                id="bedrooms"
+                name="bedrooms"
+                value={formData.bedrooms || 1}
+                onChange={(e) => setFormData({ ...formData, bedrooms: Math.max(1, parseInt(e.target.value) || 1) })}
+                className="w-16 text-center border-t border-b border-gray-300"
+                min="1"
+              />
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, bedrooms: (prev.bedrooms || 1) + 1 }))}
+                className="px-3 py-2 border border-gray-300 rounded-r"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="bathrooms">Bathrooms</label>
+            <div className="flex items-center">
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, bathrooms: Math.max(1, (prev.bathrooms || 1) - 1) }))}
+                className="px-3 py-2 border border-gray-300 rounded-l"
+              >
+                -
+              </button>
+              <input
+                type="number"
+                id="bathrooms"
+                name="bathrooms"
+                value={formData.bathrooms || 1}
+                onChange={(e) => setFormData({ ...formData, bathrooms: Math.max(1, parseInt(e.target.value) || 1) })}
+                className="w-16 text-center border-t border-b border-gray-300"
+                min="1"
+              />
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, bathrooms: (prev.bathrooms || 1) + 1 }))}
+                className="px-3 py-2 border border-gray-300 rounded-r"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Checkbox
+                id="availableStatus"
+                checked={formData.availableStatus}
+                onCheckedChange={(checked) => setFormData({ ...formData, availableStatus: checked })}
+              />
+              <label htmlFor="availableStatus" className="ml-2">Available</label>
+            </div>
+            <Button 
+              type="button" 
+              onClick={handleDelete} 
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              <Trash2 size={20} className="mr-2" />
+              Delete
+            </Button>
+          </div>
+
+          <Input
+            type="text"
+            name="ownerContact"
+            value={formData.ownerContact}
+            onChange={handleChange}
+            placeholder="Owner Contact"
+          />
+
           <div>
             <label htmlFor="image-upload" className="cursor-pointer">
               <div className="flex items-center space-x-2 text-blue-500">
@@ -150,7 +317,7 @@ const PropertyForm = () => {
               className="hidden"
             />
           </div>
-          
+
           {formData.images.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {formData.images.map((image, index) => (
@@ -164,42 +331,17 @@ const PropertyForm = () => {
             </div>
           )}
 
-          <LoadScript googleMapsApiKey="YOUR_GOOGLE_MAPS_API_KEY">
-            <GoogleMap
-              mapContainerStyle={containerStyle}
-              center={mapCenter}
-              zoom={15}
-              onClick={handleMapClick}
-            >
-              {formData.latitude && formData.longitude && (
-                <Marker
-                  position={{
-                    lat: parseFloat(formData.latitude),
-                    lng: parseFloat(formData.longitude)
-                  }}
-                />
-              )}
-            </GoogleMap>
-          </LoadScript>
-
-          <div className="flex space-x-2">
-            <Input
-              type="text"
-              name="latitude"
-              value={formData.latitude}
-              onChange={handleChange}
-              placeholder="Latitude"
-              readOnly
-            />
-            <Input
-              type="text"
-              name="longitude"
-              value={formData.longitude}
-              onChange={handleChange}
-              placeholder="Longitude"
-              readOnly
-            />
-          </div>
+          <Map
+            {...mapCenter}
+            mapboxAccessToken="pk.eyJ1IjoiYW50b211bGkiLCJhIjoiY2x6djVkeHloMDN6NTJtczJzejZwYml1ciJ9.AXoIJyK2JC9PoSKgZOPTkA"
+            onClick={handleMapClick}
+            style={containerStyle}
+            mapStyle="mapbox://styles/mapbox/streets-v11"
+          >
+            <NavigationControl />
+            <GeolocateControl />
+            <Marker latitude={mapCenter.latitude} longitude={mapCenter.longitude} color="red" />
+          </Map>
 
           <Button type="submit" className="w-full">Submit</Button>
         </form>

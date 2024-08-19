@@ -3,7 +3,6 @@ import { Routes, Route } from 'react-router-dom';
 import Home from './Home';
 import PropertyForm from './PropertyForm';
 import PropertyList from './PropertyList';
-import Map from './Map';
 
 const Body = () => (
   <div className="flex flex-col flex-grow container mx-auto mt-10 bg-white">
@@ -14,9 +13,6 @@ const Body = () => (
           <Route path="/form" element={<PropertyForm />} />
           <Route path="/list" element={<PropertyList />} />
         </Routes>
-      </div>
-      <div className="w-1/2 p-4">
-        <Map />
       </div>
     </div>
 
