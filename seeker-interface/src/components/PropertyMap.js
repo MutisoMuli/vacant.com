@@ -17,6 +17,21 @@ function PropertyMap() {
   const [radius, setRadius] = useState(5); // Default 5km radius
 
   useEffect(() => {
+    const fetchProperties = async (location) => {
+      try {
+        const response = await axios.get('/api/seeker/nearby-properties', {
+          params: {
+            latitude: location.latitude,
+            longitude: location.longitude,
+            radius: radius
+          }
+        });
+        setProperties(response.data);
+      } catch (error) {
+        console.error('Error fetching properties:', error);
+      }
+    };
+
     // Get user's location
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -37,27 +52,16 @@ function PropertyMap() {
         }
       );
     }
-  }, []);
 
-  const fetchProperties = async (location) => {
-    try {
-      const response = await axios.get('/api/seeker/nearby-properties', {
-        params: {
-          latitude: location.latitude,
-          longitude: location.longitude,
-          radius: radius
-        }
-      });
-      setProperties(response.data);
-    } catch (error) {
-      console.error('Error fetching properties:', error);
-    }
-  };
+    // Cleanup function if needed
+    return () => {
+      // Cancel any ongoing requests or clean up resources if necessary
+    };
+  }, [radius]); // Fetch properties when radius changes
 
   const handleRadiusChange = (e) => {
     const newRadius = parseInt(e.target.value);
     setRadius(newRadius);
-    fetchProperties(viewport);
   };
 
   return (

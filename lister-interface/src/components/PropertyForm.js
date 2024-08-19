@@ -34,6 +34,7 @@ const PropertyForm = () => {
 
   const [mapCenter, setMapCenter] = useState(initialCenter);
   const [locationSet, setLocationSet] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -117,6 +118,7 @@ const PropertyForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
       const data = new FormData();
       Object.keys(formData).forEach((key) => {
@@ -135,16 +137,22 @@ const PropertyForm = () => {
       if (response.ok) {
         const result = await response.json();
         console.log('Property added:', result);
+        alert('Property successfully added!');
+        handleDelete(); // Reset the form
       } else {
-        console.error('Error adding property');
+        const errorData = await response.json();
+        console.error('Error adding property:', errorData);
+        alert('Error adding property. Please try again.');
       }
     } catch (error) {
       console.error('Error adding property:', error);
+      alert('An unexpected error occurred. Please try again later.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleDelete = () => {
-    // Reset the form data to its initial state
     setFormData({
       address: '',
       latitude: '',
@@ -343,7 +351,9 @@ const PropertyForm = () => {
             <Marker latitude={mapCenter.latitude} longitude={mapCenter.longitude} color="red" />
           </Map>
 
-          <Button type="submit" className="w-full">Submit</Button>
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? 'Submitting...' : 'Submit'}
+          </Button>
         </form>
       </CardContent>
     </Card>
