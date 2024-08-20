@@ -15,13 +15,18 @@ CREATE TABLE users (
 CREATE TABLE properties (
   id SERIAL PRIMARY KEY,
   lister_id INTEGER REFERENCES users(id),
+  address VARCHAR(255) NOT NULL,
+  latitude NUMERIC(10, 8) NOT NULL,
+  longitude NUMERIC(11, 8) NOT NULL,
+  property_type VARCHAR(50) NOT NULL,
   title VARCHAR(255) NOT NULL,
   description TEXT,
   price NUMERIC(10, 2) NOT NULL,
   bedrooms INTEGER,
   bathrooms INTEGER,
-  latitude NUMERIC(10, 8) NOT NULL,
-  longitude NUMERIC(11, 8) NOT NULL,
+  available_status BOOLEAN DEFAULT true,
+  owner_contact VARCHAR(100),
+  images TEXT[],
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

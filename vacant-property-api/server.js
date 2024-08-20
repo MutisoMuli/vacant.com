@@ -3,6 +3,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const { Pool } = require('pg');
+const multer = require('multer');
+const path = require('path');
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -14,10 +16,23 @@ app.use(bodyParser.json());
 const pool = new Pool({
   user: 'postgres',
   host: 'localhost',
-  database: 'vacant_crud',
+  database: 'vacant_houses',
   password: '52605260',
   port: 5432,
 });
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, 'uploads/')
+    },
+    filename: function (req, file, cb) {
+      cb(null, Date.now() + path.extname(file.originalname))
+    }
+  });
+  
+  const upload = multer({ storage: storage });
+  
 
 // User registration
 app.post('/api/register', async (req, res) => {
@@ -67,18 +82,37 @@ app.post('/api/register', async (req, res) => {
     }
   });
   
-  // Add property (for listers)
-  app.post('/api/properties', async (req, res) => {
-    const { lister_id, title, description, price, bedrooms, bathrooms, latitude, longitude } = req.body;
+ // Add property (for listers)
+app.post('/api/properties', upload.array('images', 5), async (req, res) => {
+    const { 
+      lister_id,
+      address,
+      latitude,
+      longitude,
+      propertyType,
+      title,
+      description,
+      price,
+      bedrooms,
+      bathrooms,
+      availableStatus,
+      ownerContact
+    } = req.body;
+  
+    const imagePaths = req.files ? req.files.map(file => file.path) : [];
+  
     try {
       const result = await pool.query(
-        'INSERT INTO properties (lister_id, title, description, price, bedrooms, bathrooms, latitude, longitude) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
-        [lister_id, title, description, price, bedrooms, bathrooms, latitude, longitude]
+        `INSERT INTO properties 
+         (lister_id, address, latitude, longitude, property_type, title, description, price, bedrooms, bathrooms, available_status, owner_contact, images) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) 
+         RETURNING *`,
+        [lister_id, address, latitude, longitude, propertyType, title, description, price, bedrooms, bathrooms, availableStatus, ownerContact, imagePaths]
       );
       res.status(201).json(result.rows[0]);
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: 'Internal server error' });
+      console.error('Error in /api/properties:', err);
+      res.status(500).json({ error: 'Internal server error', details: err.message });
     }
   });
   

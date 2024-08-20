@@ -7,6 +7,9 @@ import { Checkbox } from './ui/checkbox';
 import { Button } from './ui/button';
 import { Camera, MapPin, Trash2 } from 'lucide-react';
 import { geocodeReverse } from './geocodeReverse';
+import { getCurrentUserId } from './auth';
+import { ClipLoader } from "react-spinners";
+
 
 const containerStyle = {
   width: '100%',
@@ -116,6 +119,18 @@ const PropertyForm = () => {
     setMapCenter({ latitude: lngLat.lat, longitude: lngLat.lng });
   };
 
+  const handleMarkerDrag = async (event) => {
+    const { lngLat } = event;
+    const address = await geocodeReverse(lngLat.lat, lngLat.lng);
+    setFormData((prevData) => ({
+      ...prevData,
+      address,
+      latitude: lngLat.lat.toString(),
+      longitude: lngLat.lng.toString(),
+    }));
+    setMapCenter({ latitude: lngLat.lat, longitude: lngLat.lng });
+  };
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -128,12 +143,16 @@ const PropertyForm = () => {
           data.append(key, formData[key]);
         }
       });
-
-      const response = await fetch('/api/properties', {
+  
+      // Make sure you're including all necessary fields, especially lister_id
+      // data.append('lister_id', getCurrentUserId()); // You need to implement this function
+      data.append('title', formData.address); // Assuming you want to use address as the title
+  
+      const response = await fetch('http://localhost:5000/api/properties', {
         method: 'POST',
         body: data,
       });
-
+  
       if (response.ok) {
         const result = await response.json();
         console.log('Property added:', result);
@@ -142,7 +161,7 @@ const PropertyForm = () => {
       } else {
         const errorData = await response.json();
         console.error('Error adding property:', errorData);
-        alert('Error adding property. Please try again.');
+        alert(`Error adding property: ${errorData.details || 'Please try again.'}`);
       }
     } catch (error) {
       console.error('Error adding property:', error);
@@ -151,6 +170,15 @@ const PropertyForm = () => {
       setIsSubmitting(false);
     }
   };
+
+  const validateForm = () => {
+    if (!formData.address || !formData.propertyType || !formData.price) {
+      alert('Please fill in all required fields.');
+      return false;
+    }
+    return true;
+  };
+  
 
   const handleDelete = () => {
     setFormData({
@@ -172,7 +200,10 @@ const PropertyForm = () => {
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
-        <h1 className="text-2xl font-bold">Add Property</h1>
+        const { t } = useTranslation();
+
+        <h1 className="text-2xl font-bold">{t('Add Property')}</h1>
+ 
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -351,9 +382,22 @@ const PropertyForm = () => {
             <Marker latitude={mapCenter.latitude} longitude={mapCenter.longitude} color="red" />
           </Map>
 
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? 'Submitting...' : 'Submit'}
+          <Marker
+            latitude={mapCenter.latitude}
+            longitude={mapCenter.longitude}
+            color="red"
+            draggable
+            onDragEnd={handleMarkerDrag}
+          />
+
+          <Button 
+            type="submit" 
+            disabled={isSubmitting}
+            className="bg-blue-500 hover:bg-blue-600 text-white"
+          >
+            {isSubmitting ? <ClipLoader size={24} color="#fff" /> : 'Submit'}
           </Button>
+
         </form>
       </CardContent>
     </Card>
