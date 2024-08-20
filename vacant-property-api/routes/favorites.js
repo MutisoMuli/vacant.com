@@ -5,6 +5,26 @@ const { Favorite, User, Property } = require('../models');
 // POST a new favorite
 router.post('/', async (req, res) => {
   try {
+    const { UserID, PropertyID } = req.body;
+
+    // Basic validation
+    if (!UserID || !PropertyID) {
+      return res.status(400).json({ message: 'UserID and PropertyID are required.' });
+    }
+
+    // Check if the user exists
+    const userExists = await User.findByPk(UserID);
+    if (!userExists) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    // Check if the property exists
+    const propertyExists = await Property.findByPk(PropertyID);
+    if (!propertyExists) {
+      return res.status(404).json({ message: 'Property not found.' });
+    }
+
+    // Create the new favorite
     const newFavorite = await Favorite.create(req.body);
     res.status(201).json(newFavorite);
   } catch (err) {
