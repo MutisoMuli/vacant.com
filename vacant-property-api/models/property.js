@@ -30,7 +30,6 @@ class Property {
     }
   }
 
-  // Example additional method: Find a property by ID
   static async findById(id) {
     const query = 'SELECT * FROM properties WHERE id = $1';
     const values = [id];
@@ -43,8 +42,7 @@ class Property {
       throw error;
     }
   }
-  
-  // Example additional method: Update a property by ID
+
   static async updateById(id, propertyData) {
     const { address, latitude, longitude, propertyType, price, bedrooms, bathrooms, availableStatus, ownerContact } = propertyData;
     const query = `
@@ -63,7 +61,6 @@ class Property {
     }
   }
 
-  // Example additional method: Delete a property by ID
   static async deleteById(id) {
     const query = 'DELETE FROM properties WHERE id = $1 RETURNING *';
     const values = [id];
