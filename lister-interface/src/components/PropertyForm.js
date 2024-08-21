@@ -10,12 +10,13 @@ import { geocodeReverse } from './geocodeReverse';
 import { getCurrentUserId } from './auth';
 import { ClipLoader } from "react-spinners";
 
-
+// Defines the width and height of the map container
 const containerStyle = {
   width: '100%',
   height: '400px',
 };
 
+// Provides a default center for the map when the user’s location is not available.
 const initialCenter = {
   latitude: -3.745,
   longitude: -38.523,
@@ -23,6 +24,7 @@ const initialCenter = {
 
 const PropertyForm = () => {
 
+  // Provides a default center for the map when the user’s location is not available.
   const [formData, setFormData] = useState({
     address: '',
     latitude: '',
@@ -35,12 +37,17 @@ const PropertyForm = () => {
     ownerContact: '',
     images: [],
   });
-
+  // mapCenter: Stores the current center of the map, updated based on user actions.
+  // locationSet and isSubmitting: Track whether the location is set and whether the form is currently being submitted.
   const [mapCenter, setMapCenter] = useState(initialCenter);
   const [locationSet, setLocationSet] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+
+    // This effect runs when the component is first rendered, 
+    // fetching the user’s current location using navigator.geolocation.getCurrentPosition.
+    // The user’s location is then set as the map’s center, and the latitude and longitude are stored in formData.
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -63,6 +70,10 @@ const PropertyForm = () => {
     }
   }, []);
 
+  // handleLocationClick: Handles clicking the location icon in the form
+  // If the location is not set, it fetches the user’s current location, 
+  // reverse geocodes it to get the address, and updates the form with these details. 
+  // If the location is already set, it clears the location details.
   const handleLocationClick = async () => {
     if (locationSet) {
       setFormData((prevData) => ({
@@ -93,23 +104,7 @@ const PropertyForm = () => {
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-
-    if (name === "price") {
-      const formattedValue = value.replace(/\D/g, "");
-      const withCommas = formattedValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-      setFormData({ ...formData, [name]: withCommas });
-    } else {
-      setFormData({ ...formData, [name]: value });
-    }
-  };
-
-  const handleImageUpload = (e) => {
-    const files = Array.from(e.target.files);
-    setFormData({ ...formData, images: [...formData.images, ...files] });
-  };
-
+  // handleMapClick: Allows the user to click on the map to set the latitude and longitude of the property.
   const handleMapClick = (event) => {
     const { lngLat } = event;
     setFormData({
@@ -120,6 +115,8 @@ const PropertyForm = () => {
     setMapCenter({ latitude: lngLat.lat, longitude: lngLat.lng });
   };
 
+  // handleMarkerDrag: Enables dragging the map marker to update the latitude, longitude, 
+  // and address in formData based on the marker's new position.
   const handleMarkerDrag = async (event) => {
     const { lngLat } = event;
     const address = await geocodeReverse(lngLat.lat, lngLat.lng);
@@ -132,6 +129,36 @@ const PropertyForm = () => {
     setMapCenter({ latitude: lngLat.lat, longitude: lngLat.lng });
   };
   
+  // handleChange: Updates the form fields when the user types in them. 
+  // For the price field, it also formats the input as the user types.
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    if (name === "price") {
+      const formattedValue = value.replace(/\D/g, "");
+      const withCommas = formattedValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      setFormData({ ...formData, [name]: withCommas });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
+  };
+  // handleImageUpload: Handles image uploads, storing the selected files in formData.
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    setFormData({ ...formData, images: [...formData.images, ...files] });
+  };
+
+  // validateForm: Ensures all required fields (address, property type, price) are filled out before submission.
+  const validateForm = () => {
+    if (!formData.address || !formData.propertyType || !formData.price) {
+      alert('Please fill in all required fields.');
+      return false;
+     }
+      return true;
+    };
+
+  // This function validates the form, appends the form data to a FormData object, 
+  // and sends it via a POST request to the backend API.
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) {
@@ -150,7 +177,7 @@ const PropertyForm = () => {
       });
   
       // Make sure you're including all necessary fields, especially lister_id
-      data.append(getCurrentUserId()); // You need to implement this function
+      data.append('userId', getCurrentUserId()); // You need to implement this function
       data.append('title', formData.address); // Assuming you want to use address as the title
   
       const response = await fetch('http://localhost:5000/routes/properties', {
@@ -176,15 +203,7 @@ const PropertyForm = () => {
     }
   };
 
-  const validateForm = () => {
-    if (!formData.address || !formData.propertyType || !formData.price) {
-      alert('Please fill in all required fields.');
-      return false;
-    }
-    return true;
- };
-  
-
+  // Resets the form fields, the map center, and the location state.
   const handleDelete = () => {
     setFormData({
       address: '',
@@ -384,16 +403,15 @@ const PropertyForm = () => {
             <NavigationControl />
             <GeolocateControl />
             <Marker latitude={mapCenter.latitude} longitude={mapCenter.longitude} color="red" />
-          </Map>
 
-          <Marker
-            latitude={mapCenter.latitude}
-            longitude={mapCenter.longitude}
-            color="red"
-            draggable
-            onDragEnd={handleMarkerDrag}
-          />
-
+            <Marker
+              latitude={mapCenter.latitude}
+              longitude={mapCenter.longitude}
+              color="red"
+              draggable
+              onDragEnd={handleMarkerDrag}
+            />
+          </Map> 
           <Button 
             type="submit" 
             disabled={isSubmitting}
