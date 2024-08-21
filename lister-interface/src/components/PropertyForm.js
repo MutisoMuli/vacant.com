@@ -9,7 +9,6 @@ import { Camera, MapPin, Trash2 } from 'lucide-react';
 import { geocodeReverse } from './geocodeReverse';
 import { getCurrentUserId } from './auth';
 import { ClipLoader } from "react-spinners";
-import { useTranslation } from 'react-i18next';
 
 
 const containerStyle = {
@@ -23,8 +22,6 @@ const initialCenter = {
 };
 
 const PropertyForm = () => {
-
-  const { t } = useTranslation();
 
   const [formData, setFormData] = useState({
     address: '',
@@ -137,6 +134,10 @@ const PropertyForm = () => {
   
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) {
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const data = new FormData();
@@ -149,7 +150,7 @@ const PropertyForm = () => {
       });
   
       // Make sure you're including all necessary fields, especially lister_id
-      // data.append('lister_id', getCurrentUserId()); // You need to implement this function
+      data.append(getCurrentUserId()); // You need to implement this function
       data.append('title', formData.address); // Assuming you want to use address as the title
   
       const response = await fetch('http://localhost:5000/routes/properties', {
@@ -181,7 +182,7 @@ const PropertyForm = () => {
       return false;
     }
     return true;
-  };
+ };
   
 
   const handleDelete = () => {
@@ -205,7 +206,7 @@ const PropertyForm = () => {
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
 
-        <h1 className="text-2xl font-bold">{t('Add Property')}</h1>
+        <h1 className="text-2xl font-bold">Add Property</h1>
  
       </CardHeader>
       <CardContent>
