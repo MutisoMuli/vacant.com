@@ -16,7 +16,7 @@ function App() {
 
   const fetchProperties = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/properties');
+      const response = await axios.get('http://localhost:5000/routes/properties');
       setProperties(response.data);
     } catch (error) {
       console.error('Error fetching properties:', error);
@@ -25,7 +25,7 @@ function App() {
 
   const addProperty = async (property) => {
     try {
-      await axios.post('http://localhost:5000/api/properties', property);
+      await axios.post('http://localhost:5000/routes/properties', property);
       fetchProperties();
     } catch (error) {
       console.error('Error adding property:', error);
