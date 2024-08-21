@@ -1,25 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const Property = require('../models/property');
-const multer = require('multer');
-const path = require('path');
+const { Pool } = require('pg');
 
-// Set up multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
+// Database connection
+const pool = new Pool({
+  user: 'postgres',
+  host: 'localhost',
+  database: 'vacant_houses',
+  password: '52605260',
+  port: 5432,
 });
-const upload = multer({ storage: storage });
 
 // GET all properties
 router.get('/', async (req, res) => {
   try {
-    const properties = await Property.findAll();
-    res.json(properties);
+    const properties = await pool.query('SELECT * FROM properties');
+    res.json(properties.rows);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');
@@ -27,11 +23,41 @@ router.get('/', async (req, res) => {
 });
 
 // POST a new property
-router.post('/', upload.array('images', 5), async (req, res) => {
+router.post('/', async (req, res) => {
   try {
-    const newProperty = await Property.create(req.body);
-    // Handle image uploads here
-    res.json(newProperty);
+    const {
+      address,
+      latitude,
+      longitude,
+      propertyType,
+      price,
+      bedrooms,
+      bathrooms,
+      availableStatus,
+      ownerContact,
+      userId,
+    } = req.body;
+
+    const imagesArray = req.files.map((file) => file.filename);
+
+    const result = await pool.query(
+      'INSERT INTO properties (address, latitude, longitude, property_type, price, bedrooms, bathrooms, available_status, owner_contact, user_id, images) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *',
+      [
+        address,
+        latitude,
+        longitude,
+        propertyType,
+        price,
+        bedrooms,
+        bathrooms,
+        availableStatus,
+        ownerContact,
+        userId,
+        imagesArray,
+      ]
+    );
+
+    res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');
