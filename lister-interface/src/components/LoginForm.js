@@ -5,24 +5,29 @@ function LoginForm({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  const [error, setError] = useState(null);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Replace with your actual login logic
-    const response = await fetch('/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
-
-    if (response.ok) {
-      const { token } = await response.json();
-      // Save token in localStorage or cookies
-      localStorage.setItem('token', token);
-      onLogin(); // Update the authenticated state
-    } else {
-      // Handle login error
-      alert('Login failed');
+    try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({  email, password }),
+      });
+    
+      if (response.ok) {
+        const { token } = await response.json();
+        // Save token in localStorage or cookies
+        localStorage.setItem('token', token);
+        onLogin(); 
+      } else {
+        // Handle login error
+        const { error } = await response.json();
+        setError(error);
+      }
+    } catch (err) {
+      setError('An error occurred. Please try again later.')
     }
   };
 

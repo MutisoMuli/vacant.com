@@ -6,22 +6,26 @@ function SignupForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  const [error, setError] = useState(null);
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Replace with your actual signup logic
-    const response = await fetch('/api/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, email, password }),
-    });
-
-    if (response.ok) {
-      // Redirect or notify user of successful signup
-      alert('Signup successful');
-    } else {
-      // Handle signup error
-      alert('Signup failed');
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      if (response.ok) {
+        const { token } = await response.json();
+        localStorage.setItem('token', token);
+        onLogin();
+      } else {
+        const { error } = await response.json();
+        setError(error);
+      }
+    } catch (err) {
+      setError('An error occurred. Please try again later.');
     }
   };
 
