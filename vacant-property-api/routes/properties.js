@@ -1,67 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const { Pool } = require('pg');
+const propertyController = require('../controllers/propertyController');
+const auth = require('../middleware/auth');
 
-// Database connection
-const pool = new Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'vacant_houses',
-  password: '52605260',
-  port: 5432,
-});
+// Route to get all properties
+router.get('/', propertyController.getAllProperties);
 
-// GET all properties
-router.get('/', async (req, res) => {
-  try {
-    const properties = await pool.query('SELECT * FROM properties');
-    res.json(properties.rows);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
-  }
-});
+// Route to get a property by ID
+router.get('/:id', propertyController.getPropertyById);
 
-// POST a new property
-router.post('/', async (req, res) => {
-  try {
-    const {
-      address,
-      latitude,
-      longitude,
-      propertyType,
-      price,
-      bedrooms,
-      bathrooms,
-      availableStatus,
-      ownerContact,
-      userId,
-    } = req.body;
+// Route to create a new property
+router.post('/', auth, propertyController.createProperty);
 
-    const imagesArray = req.files.map((file) => file.filename);
+// Route to update an existing property
+router.put('/:id', auth, propertyController.updateProperty);
 
-    const result = await pool.query(
-      'INSERT INTO properties (address, latitude, longitude, property_type, price, bedrooms, bathrooms, available_status, owner_contact, user_id, images) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *',
-      [
-        address,
-        latitude,
-        longitude,
-        propertyType,
-        price,
-        bedrooms,
-        bathrooms,
-        availableStatus,
-        ownerContact,
-        userId,
-        imagesArray,
-      ]
-    );
-
-    res.status(201).json(result.rows[0]);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
-  }
-});
+// Route to delete a property
+router.delete('/:id', auth, propertyController.deleteProperty);
 
 module.exports = router;

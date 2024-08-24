@@ -1,21 +1,37 @@
+import {
+  ADD_PROPERTY,
+  ADD_PROPERTY_SUCCESS,
+  ADD_PROPERTY_FAILURE,
+} from '../types/propertyTypes';
+
 const initialState = {
-    properties: [],
-    loading: false,
-    error: null,
-  };
-  
-  function propertyReducer(state = initialState, action) {
-    switch (action.type) {
-      case 'FETCH_PROPERTIES_REQUEST':
-        return { ...state, loading: true };
-      case 'FETCH_PROPERTIES_SUCCESS':
-        return { ...state, loading: false, properties: action.payload };
-      case 'FETCH_PROPERTIES_FAILURE':
-        return { ...state, loading: false, error: action.payload };
-      default:
-        return state;
-    }
+  loading: false,
+  property: null,
+  error: null,
+};
+
+export const propertyReducer = (state = initialState, action) => {
+  switch (action.type) {
+    case ADD_PROPERTY:
+      return {
+        ...state,
+        loading: true,
+        error: null,
+      };
+    case ADD_PROPERTY_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        property: action.payload,
+        error: null,
+      };
+    case ADD_PROPERTY_FAILURE:
+      return {
+        ...state,
+        loading: false,
+        error: action.payload,
+      };
+    default:
+      return state;
   }
-  
-  export default propertyReducer;
-  
+};

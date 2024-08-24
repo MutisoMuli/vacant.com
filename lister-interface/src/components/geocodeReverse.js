@@ -11,7 +11,7 @@ export async function geocodeReverse(latitude, longitude) {
     }
     
     const data = await response.json();
-    const placeName = data.features[0]?.place_name || 'Unknown location';
+    const placeName = data.features[0]?.place_name || 'Enter location';
   
     return placeName;
   }

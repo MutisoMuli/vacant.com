@@ -1,55 +1,66 @@
-'use strict';
-/** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Properties', {
-      id: {
-        allowNull: false,
-        autoIncrement: true,
-        primaryKey: true,
-        type: Sequelize.INTEGER
-      },
-      propertyID: {
-        type: Sequelize.STRING
-      },
-      address: {
-        type: Sequelize.STRING
-      },
-      latitude: {
-        type: Sequelize.FLOAT
-      },
-      longitude: {
-        type: Sequelize.FLOAT
-      },
-      propertyType: {
-        type: Sequelize.STRING
-      },
-      size: {
-        type: Sequelize.INTEGER
-      },
-      condition: {
-        type: Sequelize.STRING
-      },
-      availableStatus: {
-        type: Sequelize.BOOLEAN
-      },
-      ownerContact: {
-        type: Sequelize.JSONB
-      },
-      lastUpdated: {
-        type: Sequelize.DATE
-      },
-      createdAt: {
-        allowNull: false,
-        type: Sequelize.DATE
-      },
-      updatedAt: {
-        allowNull: false,
-        type: Sequelize.DATE
-      }
-    });
+  up: async (queryInterface, Sequelize) => {
+      await queryInterface.createTable('Properties', {
+          id: {
+              type: Sequelize.INTEGER,
+              autoIncrement: true,
+              primaryKey: true,
+              allowNull: false,
+          },
+          title: {
+              type: Sequelize.STRING,
+              allowNull: false,
+          },
+          description: {
+              type: Sequelize.TEXT,
+              allowNull: false,
+          },
+          price: {
+              type: Sequelize.DECIMAL(10, 2),
+              allowNull: false,
+          },
+          bedrooms: {
+              type: Sequelize.INTEGER,
+              allowNull: false,
+          },
+          bathrooms: {
+              type: Sequelize.INTEGER,
+              allowNull: false,
+          },
+          address: {
+              type: Sequelize.STRING,
+              allowNull: false,
+          },
+          latitude: {
+              type: Sequelize.DECIMAL(10, 8),
+              allowNull: false,
+          },
+          longitude: {
+              type: Sequelize.DECIMAL(11, 8),
+              allowNull: false,
+          },
+          available: {
+              type: Sequelize.BOOLEAN,
+              defaultValue: true,
+          },
+          ownerContact: {
+              type: Sequelize.STRING,
+              allowNull: false,
+          },
+          createdAt: {
+              type: Sequelize.DATE,
+              allowNull: false,
+              defaultValue: Sequelize.fn('now'),
+          },
+          updatedAt: {
+              type: Sequelize.DATE,
+              allowNull: false,
+              defaultValue: Sequelize.fn('now'),
+          }
+      });
   },
-  async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Properties');
+
+  down: async (queryInterface, Sequelize) => {
+      await queryInterface.dropTable('Properties');
   }
 };

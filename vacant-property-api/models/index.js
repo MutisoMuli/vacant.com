@@ -2,23 +2,28 @@
 
 const fs = require('fs');
 const path = require('path');
-const process = require('process');
+const Sequelize = require('sequelize');
 const config = require(__dirname + '/../config/config.json')[process.env.NODE_ENV || 'development'];
 const db = {};
 
-const Pool = require('pg').Pool;
-const pool = new Pool({
-  user: config.username,
+const sequelize = new Sequelize(config.database, config.username, config.password, {
   host: config.host,
-  database: config.database,
-  password: config.password,
+  dialect: 'postgres',
   port: config.port,
 });
 
-// Add custom model classes
-const Property = require('./property'); // Adjust the path if necessary
+// Import and initialize models
+const Property = require('./property')(sequelize);  // Pass sequelize instance
 
-db.pool = pool;
+db.sequelize = sequelize;
+db.Sequelize = Sequelize;
 db.Property = Property;
+
+// If you have associations, add them here
+Object.keys(db).forEach((modelName) => {
+  if (db[modelName].associate) {
+    db[modelName].associate(db);
+  }
+});
 
 module.exports = db;

@@ -1,31 +1,32 @@
 import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { addProperty } from '../redux/actions/propertyActions';
 import Map, { Marker, NavigationControl, GeolocateControl } from 'react-map-gl';
 import { Card, CardContent } from './ui/card';
 import { CardHeader } from './ui/card-header';
 import { Input } from './ui/input';
 import { Checkbox } from './ui/checkbox';
-import { Button } from './ui/button';
-import { Camera, MapPin, Trash2 } from 'lucide-react';
+//import { Button } from './ui/button';
+import { MapPin, Trash2 } from 'lucide-react';
 import { geocodeReverse } from './geocodeReverse';
-import { getCurrentUserId } from './auth';
+//import { getCurrentUserId } from './auth';
 import { ClipLoader } from "react-spinners";
+import Resizer from 'react-image-file-resizer';
 
-// Defines the width and height of the map container
 const containerStyle = {
   width: '100%',
-  height: '400px',
+  height: '800px',
 };
 
-// Provides a default center for the map when the user’s location is not available.
 const initialCenter = {
   latitude: -3.745,
   longitude: -38.523,
 };
 
 const PropertyForm = () => {
-
-  // Provides a default center for the map when the user’s location is not available.
   const [formData, setFormData] = useState({
+    title: '',
+    description: '',
     address: '',
     latitude: '',
     longitude: '',
@@ -37,17 +38,15 @@ const PropertyForm = () => {
     ownerContact: '',
     images: [],
   });
-  // mapCenter: Stores the current center of the map, updated based on user actions.
-  // locationSet and isSubmitting: Track whether the location is set and whether the form is currently being submitted.
+
+  const dispatch = useDispatch();
+  const propertyState = useSelector((state) => state.property);
+
   const [mapCenter, setMapCenter] = useState(initialCenter);
   const [locationSet, setLocationSet] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  //const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-
-    // This effect runs when the component is first rendered, 
-    // fetching the user’s current location using navigator.geolocation.getCurrentPosition.
-    // The user’s location is then set as the map’s center, and the latitude and longitude are stored in formData.
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -65,15 +64,16 @@ const PropertyForm = () => {
         (error) => {
           console.error("Error getting user location:", error);
           setMapCenter(initialCenter);
+          setLocationSet(true);
+        },
+        (error) => {
+          console.error("Error getting user location:", error);
+          setMapCenter(initialCenter);
         }
       );
     }
   }, []);
 
-  // handleLocationClick: Handles clicking the location icon in the form
-  // If the location is not set, it fetches the user’s current location, 
-  // reverse geocodes it to get the address, and updates the form with these details. 
-  // If the location is already set, it clears the location details.
   const handleLocationClick = async () => {
     if (locationSet) {
       setFormData((prevData) => ({
@@ -104,7 +104,6 @@ const PropertyForm = () => {
     }
   };
 
-  // handleMapClick: Allows the user to click on the map to set the latitude and longitude of the property.
   const handleMapClick = (event) => {
     const { lngLat } = event;
     setFormData({
@@ -115,8 +114,6 @@ const PropertyForm = () => {
     setMapCenter({ latitude: lngLat.lat, longitude: lngLat.lng });
   };
 
-  // handleMarkerDrag: Enables dragging the map marker to update the latitude, longitude, 
-  // and address in formData based on the marker's new position.
   const handleMarkerDrag = async (event) => {
     const { lngLat } = event;
     const address = await geocodeReverse(lngLat.lat, lngLat.lng);
@@ -128,9 +125,7 @@ const PropertyForm = () => {
     }));
     setMapCenter({ latitude: lngLat.lat, longitude: lngLat.lng });
   };
-  
-  // handleChange: Updates the form fields when the user types in them. 
-  // For the price field, it also formats the input as the user types.
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -142,70 +137,63 @@ const PropertyForm = () => {
       setFormData({ ...formData, [name]: value });
     }
   };
-  // handleImageUpload: Handles image uploads, storing the selected files in formData.
-  const handleImageUpload = (e) => {
-    const files = Array.from(e.target.files);
-    setFormData({ ...formData, images: [...formData.images, ...files] });
-  };
 
-  // validateForm: Ensures all required fields (address, property type, price) are filled out before submission.
+  const resizeFile = (file) =>
+  new Promise((resolve) => {
+    Resizer.imageFileResizer(
+      file,
+      800, // max width
+      800, // max height
+      'JPEG',
+      70, // quality
+      0,
+      (uri) => {
+        resolve(uri);
+      },
+      'file'
+    );
+  });
+
+  const handleImageUpload = async (event) => {
+    const files = Array.from(event.target.files);
+    const remainingSlots = 5 - formData.images.length;
+    const filesToUpload = files.slice(0, remainingSlots);
+  
+    for (const file of filesToUpload) {
+      const resizedImage = await resizeFile(file);
+      setFormData(prev => ({
+        ...prev,
+        images: [...prev.images, resizedImage]
+      }));
+    }
+  
+    if (files.length > remainingSlots) {
+      alert(`Only ${remainingSlots} image(s) can be added. The maximum limit is 5 images.`);
+    }
+  };
   const validateForm = () => {
     if (!formData.address || !formData.propertyType || !formData.price) {
       alert('Please fill in all required fields.');
       return false;
-     }
-      return true;
-    };
-
-  // This function validates the form, appends the form data to a FormData object, 
-  // and sends it via a POST request to the backend API.
-  const handleSubmit = async (e) => {
+    }
+    if (formData.images.length > 5) {
+      alert('You can upload a maximum of 5 images.');
+      return false;
+    }
+    return true;
+  };
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (!validateForm()) {
       return;
     }
-
-    setIsSubmitting(true);
-    try {
-      const data = new FormData();
-      Object.keys(formData).forEach((key) => {
-        if (key === 'images') {
-          formData.images.forEach((image) => data.append('images', image));
-        } else {
-          data.append(key, formData[key]);
-        }
-      });
-  
-      // Make sure you're including all necessary fields, especially lister_id
-      data.append('userId', getCurrentUserId()); // You need to implement this function
-      data.append('title', formData.address); // Assuming you want to use address as the title
-  
-      const response = await fetch('http://localhost:5000/routes/properties', {
-        method: 'POST',
-        body: data,
-      });
-  
-      if (response.ok) {
-        const result = await response.json();
-        console.log('Property added:', result);
-        alert('Property successfully added!');
-        handleDelete(); // Reset the form
-      } else {
-        const errorData = await response.json();
-        console.error('Error adding property:', errorData);
-        alert(`Error adding property: ${errorData.details || 'Please try again.'}`);
-      }
-    } catch (error) {
-      console.error('Error adding property:', error);
-      alert('An unexpected error occurred. Please try again later.');
-    } finally {
-      setIsSubmitting(false);
-    }
+    dispatch(addProperty(formData));
   };
 
-  // Resets the form fields, the map center, and the location state.
   const handleDelete = () => {
     setFormData({
+      title: '',
+      description: '',
       address: '',
       latitude: '',
       longitude: '',
@@ -224,12 +212,30 @@ const PropertyForm = () => {
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
-
         <h1 className="text-2xl font-bold">Add Property</h1>
- 
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="relative">
+            <Input
+              type="text"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              placeholder="Title"
+            />
+          </div>
+
+          <div className="relative">
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              placeholder="Description"
+              className="w-full p-2 border border-gray-300 rounded"
+            />
+          </div>
+
           <div className="relative">
             <Input
               type="text"
@@ -283,7 +289,7 @@ const PropertyForm = () => {
             <div className="flex items-center">
               <button
                 type="button"
-                onClick={() => setFormData(prev => ({ ...prev, bedrooms: Math.max(1, (prev.bedrooms || 1) - 1) }))}
+                onClick={() => setFormData(prev => ({ ...prev, bedrooms: Math.max(1, Math.min(5, (prev.bedrooms || 1) - 1)) }))}
                 className="px-3 py-2 border border-gray-300 rounded-l"
               >
                 -
@@ -292,134 +298,161 @@ const PropertyForm = () => {
                 type="number"
                 id="bedrooms"
                 name="bedrooms"
-                value={formData.bedrooms || 1}
-                onChange={(e) => setFormData({ ...formData, bedrooms: Math.max(1, parseInt(e.target.value) || 1) })}
-                className="w-16 text-center border-t border-b border-gray-300"
+                value={formData.bedrooms}
+                onChange={handleChange}
+                className="text-center w-full p-2 border-t border-b border-gray-300"
                 min="1"
+                max="5"
               />
               <button
                 type="button"
-                onClick={() => setFormData(prev => ({ ...prev, bedrooms: (prev.bedrooms || 1) + 1 }))}
+                onClick={() => setFormData(prev => ({ ...prev, bedrooms: Math.min(5, (prev.bedrooms || 1) + 1) }))}
                 className="px-3 py-2 border border-gray-300 rounded-r"
               >
                 +
               </button>
+             </div>
             </div>
-          </div>
 
-          <div>
-            <label htmlFor="bathrooms">Bathrooms</label>
-            <div className="flex items-center">
-              <button
-                type="button"
-                onClick={() => setFormData(prev => ({ ...prev, bathrooms: Math.max(1, (prev.bathrooms || 1) - 1) }))}
-                className="px-3 py-2 border border-gray-300 rounded-l"
-              >
-                -
-              </button>
-              <input
-                type="number"
-                id="bathrooms"
-                name="bathrooms"
-                value={formData.bathrooms || 1}
-                onChange={(e) => setFormData({ ...formData, bathrooms: Math.max(1, parseInt(e.target.value) || 1) })}
-                className="w-16 text-center border-t border-b border-gray-300"
-                min="1"
-              />
-              <button
-                type="button"
-                onClick={() => setFormData(prev => ({ ...prev, bathrooms: (prev.bathrooms || 1) + 1 }))}
-                className="px-3 py-2 border border-gray-300 rounded-r"
-              >
-                +
-              </button>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <Checkbox
-                id="availableStatus"
-                checked={formData.availableStatus}
-                onCheckedChange={(checked) => setFormData({ ...formData, availableStatus: checked })}
-              />
-              <label htmlFor="availableStatus" className="ml-2">Available</label>
-            </div>
-            <Button 
-              type="button" 
-              onClick={handleDelete} 
-              className="bg-red-500 hover:bg-red-600 text-white"
-            >
-              <Trash2 size={20} className="mr-2" />
-              Delete
-            </Button>
-          </div>
-
-          <Input
-            type="text"
-            name="ownerContact"
-            value={formData.ownerContact}
-            onChange={handleChange}
-            placeholder="Owner Contact"
-          />
-
-          <div>
-            <label htmlFor="image-upload" className="cursor-pointer">
-              <div className="flex items-center space-x-2 text-blue-500">
-                <Camera size={24} />
-                <span>Upload Images</span>
+            <div>
+              <label htmlFor="bathrooms">Bathrooms</label>
+              <div className="flex items-center">
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, bathrooms: Math.max(1, Math.min(5, (prev.bathrooms || 1) - 1)) }))}
+                  className="px-3 py-2 border border-gray-300 rounded-l"
+                >
+                  -
+                </button>
+                <input
+                  type="number"
+                  id="bathrooms"
+                  name="bathrooms"
+                  value={formData.bathrooms}
+                  onChange={handleChange}
+                  className="w-16 text-center w-full p-2 border-t border-b border-gray-300"
+                  min="1"
+                  max="5"
+                />
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, bathrooms: Math.min(5, (prev.bathrooms || 1) + 1) }))}
+                  className="px-3 py-2 border border-gray-300 rounded-r"
+                >
+                  +
+                </button>
               </div>
-            </label>
-            <input
-              id="image-upload"
-              type="file"
-              multiple
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
+            </div>
+
+          <div className="flex items-center space-x-4">
+            <Checkbox
+              id="availableStatus"
+              name="availableStatus"
+              checked={formData.availableStatus}
+              onChange={(e) => setFormData({ ...formData, availableStatus: e.target.checked })}
+            />
+            <label htmlFor="availableStatus">Available</label>
+          </div>
+
+          <div>
+            <label htmlFor="ownerContact">Owner Contact</label>
+            <Input
+              type="text"
+              id="ownerContact"
+              name="ownerContact"
+              value={formData.ownerContact}
+              onChange={handleChange}
+              placeholder="Enter owner contact"
             />
           </div>
 
-          {formData.images.length > 0 && (
-            <div className="flex flex-wrap gap-2">
+          <div>
+            <label htmlFor="images">Images</label>
+            <input
+              type="file"
+              id="images"
+              name="images"
+              accept="image/*"
+              multiple
+              onChange={handleImageUpload}
+              className="p-2 border border-gray-300 rounded"
+            />
+            <div className="flex flex-wrap mt-2">
               {formData.images.map((image, index) => (
-                <img
-                  key={index}
-                  src={URL.createObjectURL(image)}
-                  alt={`Property ${index + 1}`}
-                  className="w-24 h-24 object-cover rounded"
-                />
+                <div key={index} className="relative w-24 h-24 mr-2 mb-2">
+                  <img
+                    src={URL.createObjectURL(image)}
+                    alt={`Preview ${index}`}
+                    className="object-cover w-full h-full rounded"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({
+                      ...prev,
+                      images: prev.images.filter((_, i) => i !== index)
+                    }))}
+                    className="absolute top-0 right-0 p-1 bg-white border border-gray-300 rounded-full"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               ))}
             </div>
-          )}
+          </div>
 
-          <Map
-            {...mapCenter}
-            mapboxAccessToken="pk.eyJ1IjoiYW50b211bGkiLCJhIjoiY2x6djVkeHloMDN6NTJtczJzejZwYml1ciJ9.AXoIJyK2JC9PoSKgZOPTkA"
-            onClick={handleMapClick}
-            style={containerStyle}
-            mapStyle="mapbox://styles/mapbox/streets-v11"
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="px-4 py-2 border border-gray-300 rounded bg-red-500 text-white hover:bg-red-600"
           >
-            <NavigationControl />
-            <GeolocateControl />
-            <Marker latitude={mapCenter.latitude} longitude={mapCenter.longitude} color="red" />
+            Clear Form
+          </button>
 
-            <Marker
-              latitude={mapCenter.latitude}
-              longitude={mapCenter.longitude}
-              color="red"
-              draggable
-              onDragEnd={handleMarkerDrag}
-            />
-          </Map> 
-          <Button 
-            type="submit" 
-            disabled={isSubmitting}
-            className="bg-blue-500 hover:bg-blue-600 text-white"
+          <button
+            type="submit"
+            disabled={propertyState.loading}
+            className="px-4 py-2 border border-gray-300 rounded bg-blue-500 text-white hover:bg-blue-600"
           >
-            {isSubmitting ? <ClipLoader size={24} color="#fff" /> : 'Submit'}
-          </Button>
+            {propertyState.loading ? (
+              <ClipLoader color="#ffffff" size={24} />
+            ) : (
+              'Submit'
+            )}
+          </button>
 
+          <div className="mt-4 mb-6">
+            <Map
+              {...mapCenter}
+              onClick={handleMapClick}
+              style={containerStyle}
+              mapStyle="mapbox://styles/mapbox/streets-v11"
+              mapboxAccessToken={'pk.eyJ1IjoiYW50b211bGkiLCJhIjoiY2x6djVkeHloMDN6NTJtczJzejZwYml1ciJ9.AXoIJyK2JC9PoSKgZOPTkA'}
+            >
+              <NavigationControl />
+              <GeolocateControl
+                positionOptions={{ enableHighAccuracy: true }}
+                trackUserLocation={true}
+                onGeolocate={(position) => {
+                  const userLocation = {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                  };
+                  setFormData((prevData) => ({
+                    ...prevData,
+                    latitude: userLocation.latitude.toString(),
+                    longitude: userLocation.longitude.toString(),
+                  }));
+                  setMapCenter(userLocation);
+                }}
+               />
+              <Marker
+                longitude={parseFloat(formData.longitude) || mapCenter.longitude}
+                latitude={parseFloat(formData.latitude) || mapCenter.latitude}
+                draggable
+                onDragEnd={handleMarkerDrag}
+              />
+            </Map>
+          </div>
         </form>
       </CardContent>
     </Card>
