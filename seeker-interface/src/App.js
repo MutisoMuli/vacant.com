@@ -1,54 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { BrowserRouter as Router } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchProperties } from './redux/actions/propertyActions';
 import Header from './components/Header';
-import Body from './components/Body';
-import Footer from './components/Footer';
-import NotificationSystem from './components/NotificationSystem';
-import PropertyVerification from './components/PropertyVerification';
-import ReviewSystem from './components/ReviewSystem';
-import MapComponent from './components/MapComponent';
+import PropertyMap from './components/PropertyMap';
 import PropertyList from './components/PropertyList';
+import Footer from './components/Footer';
 import './styles.css';
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState(null);
-  const [properties, setProperties] = useState([]);
+  const dispatch = useDispatch();
+  const { properties, loading, error } = useSelector((state) => state.property);
 
   useEffect(() => {
-    fetchProperties();
-  }, []);
-
-  const fetchProperties = async () => {
-    try {
-      const response = await axios.get('http://localhost:5000/api/properties');
-      setProperties(response.data);
-    } catch (error) {
-      console.error('Error fetching properties:', error);
-    }
-  };
-
-  const handleLogin = (userData) => {
-    setIsAuthenticated(true);
-    setUser(userData);
-  };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setUser(null);
-  };
+    dispatch(fetchProperties()); // Fetch properties on component mount
+  }, [dispatch]);
 
   return (
     <Router>
       <div className="min-h-screen flex flex-col bg-white">
-        <Header isAuthenticated={isAuthenticated} onLogout={handleLogout} />
-        <Body isAuthenticated={isAuthenticated} handleLogin={handleLogin} user={user} />
-        <MapComponent properties={properties} />
-        <PropertyList properties={properties} />
-        <NotificationSystem />
-        <PropertyVerification />
-        <ReviewSystem />
+        <Header />
+        <main className="flex-grow">
+          <Routes>
+            <Route path="/" element={<PropertyMap />} />
+            <Route path="/properties" element={<PropertyList properties={properties} />} />
+          </Routes>
+        </main>
         <Footer />
       </div>
     </Router>

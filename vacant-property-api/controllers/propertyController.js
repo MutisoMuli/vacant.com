@@ -1,60 +1,62 @@
 const propertyService = require('../services/propertyService');
 
-// Get all properties
-exports.getAllProperties = async (req, res) => {
+module.exports = {
+  // Get all properties
+  getAllProperties: async (req, res) => {
     try {
-        const properties = await propertyService.getAllProperties();
-        res.json(properties);
+      const properties = await propertyService.getAllProperties();
+      res.json(properties);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+      res.status(500).json({ message: error.message });
     }
-};
+  },
 
-// Get a property by ID
-exports.getPropertyById = async (req, res) => {
+  // Get a property by ID
+  getPropertyById: async (req, res) => {
     try {
-        const property = await propertyService.getPropertyById(req.params.id);
-        if (!property) {
-            return res.status(404).json({ message: 'Property not found' });
-        }
-        res.json(property);
+      const property = await propertyService.getPropertyById(req.params.id);
+      if (!property) {
+        return res.status(404).json({ message: 'Property not found' });
+      }
+      res.json(property);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+      res.status(500).json({ message: error.message });
     }
-};
+  },
 
-// Create a new property
-exports.createProperty = async (req, res) => {
+  // Create a new property
+  createProperty: async (req, res) => {
     try {
-        const property = await propertyService.createProperty(req.body, req.user.id);
-        res.status(201).json(property);
+      const property = await propertyService.createProperty(req.body, req.user.id);
+      res.status(201).json(property);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+      res.status(500).json({ message: error.message });
     }
-};
+  },
 
-// Update an existing property
-exports.updateProperty = async (req, res) => {
+  // Update an existing property
+  updateProperty: async (req, res) => {
     try {
-        const property = await propertyService.updateProperty(req.params.id, req.body);
-        if (!property) {
-            return res.status(404).json({ message: 'Property not found' });
-        }
-        res.json(property);
+      const property = await propertyService.updateProperty(req.params.id, req.body);
+      if (!property) {
+        return res.status(404).json({ message: 'Property not found' });
+      }
+      res.json(property);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+      res.status(500).json({ message: error.message });
     }
-};
+  },
 
-// Delete a property
-exports.deleteProperty = async (req, res) => {
+  // Delete a property
+  deleteProperty: async (req, res) => {
     try {
-        const property = await propertyService.deleteProperty(req.params.id);
-        if (!property) {
-            return res.status(404).json({ message: 'Property not found' });
-        }
-        res.json({ message: 'Property deleted' });
+      const property = await propertyService.deleteProperty(req.params.id);
+      if (!property) {
+        return res.status(404).json({ message: 'Property not found' });
+      }
+      res.json({ message: 'Property deleted' });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+      res.status(500).json({ message: error.message });
     }
+  }
 };

@@ -47,17 +47,7 @@ const Footer = () => {
           <a href="#" className="text-navy-blue hover:text-orange"><Linkedin size={24} /></a>
           <a href="#" className="text-navy-blue hover:text-orange"><Instagram size={24} /></a>
         </div>
-
-       
-        <div className="flex justify-center space-x-4 mb-4">
-          <a href="#" className="hover:opacity-80">
-            <img src="/api/placeholder/135/40" alt="Google Play" className="h-10" />
-          </a>
-          <a href="#" className="hover:opacity-80">
-            <img src="/api/placeholder/120/40" alt="App Store" className="h-10" />
-          </a>
-        </div>
-
+        
         <div className="text-center text-sm">
           <p>&copy; {currentYear} Vacant Property Manager, Inc.</p>
           <div className="mt-2">

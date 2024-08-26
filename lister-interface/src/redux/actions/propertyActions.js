@@ -5,7 +5,7 @@ import {
   ADD_PROPERTY_FAILURE,
 } from '../types/propertyTypes';
 
-export const addProperty = (propertyData) => async (dispatch) => {
+export const addProperty = (propertyData) => async (dispatch, getState) => {
   try {
     dispatch({ type: ADD_PROPERTY });
 
@@ -21,13 +21,17 @@ export const addProperty = (propertyData) => async (dispatch) => {
       }
     });
 
+    // Get the token from the state (assuming you're storing it in Redux)
+    const { auth: { token } } = getState();
+
     // Make an API call to save the property details
     const response = await axios.post(
-      '/api/properties', // Replace with your API endpoint
+      'http://localhost:5000/api/properties',
       formData,
       {
         headers: {
           'Content-Type': 'multipart/form-data',
+          'x-auth-token': token, // Include the token in the headers
         },
       }
     );
