@@ -2,7 +2,7 @@
   "name": "seeker-interface",
   "version": "0.1.0",
   "private": true,
-  "proxy": "http://localhost:3000",
+  "proxy": "http://localhost:5000",
   "dependencies": {
     "@mapbox/mapbox-gl-geocoder": "^5.0.2",
     "@react-google-maps/api": "^2.19.3",

@@ -185,8 +185,10 @@ const PropertyForm = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!validateForm()) {
+      console.log("Form validation failed");
       return;
     }
+    console.log("Dispatching addProperty action", formData);
     dispatch(addProperty(formData));
   };
 

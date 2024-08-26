@@ -12,7 +12,7 @@ const port = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: ['http://localhost:3000', 'http://localhost:3001'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -22,6 +22,10 @@ app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ limit: '100mb', extended: true}));
 app.use(compression());
 app.use(morgan('dev'));
+
+const seekerRoutes = require('./routes/seeker');
+
+app.use('/api/seeker', seekerRoutes);
 
 // Multer configuration
 const storage = multer.diskStorage({

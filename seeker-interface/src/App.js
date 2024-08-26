@@ -6,6 +6,7 @@ import Header from './components/Header';
 import PropertyMap from './components/PropertyMap';
 import PropertyList from './components/PropertyList';
 import Footer from './components/Footer';
+import Body from './components/Body';
 import './styles.css';
 
 function App() {
@@ -20,12 +21,8 @@ function App() {
     <Router>
       <div className="min-h-screen flex flex-col bg-white">
         <Header />
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<PropertyMap />} />
-            <Route path="/properties" element={<PropertyList properties={properties} />} />
-          </Routes>
-        </main>
+        <Body />
+        
         <Footer />
       </div>
     </Router>

@@ -24,7 +24,8 @@ export const fetchPropertiesFailure = (error) => ({
 export const fetchProperties = (latitude, longitude, radius) => async (dispatch) => {
   dispatch(fetchPropertiesRequest());
   try {
-    const response = await axios.get('/api/seeker/nearby-properties', {
+    const API_URL = 'http://localhost:5000/api/seeker/id?=2'; // Make sure this matches your backend port
+    const response = await axios.get(`${API_URL}/seeker/nearby-properties`, {
       params: {
         latitude: latitude,
         longitude: longitude,
@@ -34,5 +35,6 @@ export const fetchProperties = (latitude, longitude, radius) => async (dispatch)
     dispatch(fetchPropertiesSuccess(response.data));
   } catch (error) {
     dispatch(fetchPropertiesFailure(error.message));
+    console.error('Error fetching nearby properties:', error);
   }
 };

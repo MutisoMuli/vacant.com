@@ -1,4 +1,6 @@
 const { Property } = require('../models');
+const { Op } = require('sequelize');
+const { calculateDistance } = require('../utils/distance');
 
 module.exports = {
   getAllProperties: async () => {
@@ -20,6 +22,13 @@ module.exports = {
     }
     await property.update(propertyData);
     return property;
+  },
+
+  getNearbyProperties: async (latitude, longitude, radius) => {
+    const properties = await Property.findAll();
+    return properties.filter(property => 
+      calculateDistance(latitude, longitude, property.latitude, property.longitude) <= radius
+    );
   },
 
   deleteProperty: async (id) => {

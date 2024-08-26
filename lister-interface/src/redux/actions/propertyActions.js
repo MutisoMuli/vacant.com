@@ -26,7 +26,7 @@ export const addProperty = (propertyData) => async (dispatch, getState) => {
 
     // Make an API call to save the property details
     const response = await axios.post(
-      'http://localhost:5000/api/properties',
+      'http://localhost:5000/api/seeker/createProperty',
       formData,
       {
         headers: {

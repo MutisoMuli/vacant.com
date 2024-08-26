@@ -47,6 +47,16 @@ module.exports = {
     }
   },
 
+  getNearbyProperties: async (req, res) => {
+    try {
+      const { latitude, longitude, radius } = req.query;
+      const properties = await propertyService.getNearbyProperties(latitude, longitude, radius);
+      res.json(properties);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
+
   // Delete a property
   deleteProperty: async (req, res) => {
     try {
