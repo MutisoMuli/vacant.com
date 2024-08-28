@@ -1,3 +1,4 @@
+// propertyActions.js
 import axios from 'axios';
 import {
   ADD_PROPERTY,
