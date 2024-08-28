@@ -1,4 +1,4 @@
-
+// authReducer.js
 const initialState = {
     token: null,
     isAuthenticated: false,
