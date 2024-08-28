@@ -1,4 +1,4 @@
-// src/components/MapComponent.js
+// src components MapComponent.js
 import React from 'react'; // Ensure React is imported
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css'; // Ensure Leaflet CSS is imported
