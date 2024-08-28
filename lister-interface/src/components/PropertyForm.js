@@ -189,7 +189,13 @@ const PropertyForm = () => {
       return;
     }
     console.log("Dispatching addProperty action", formData);
-    dispatch(addProperty(formData));
+    dispatch(addProperty(formData))
+      .then(() => {
+        alert('Property added successfully!');
+      })
+      .catch((error) => {
+        alert('Error adding property: ' + error.message);
+      });
   };
 
   const handleDelete = () => {

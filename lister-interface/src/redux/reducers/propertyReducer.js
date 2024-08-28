@@ -5,7 +5,7 @@ import {
 } from '../types/propertyTypes';
 
 const initialState = {
-  properties: [],
+  properties: {},
   loading: false,
   error: null,
 };
@@ -22,7 +22,7 @@ export const propertyReducer = (state = initialState, action) => {
       return {
         ...state,
         loading: false,
-        property: [...state.properties, action.payload],
+        properties: [...state.properties, action.payload],
         error: null,
       };
     case ADD_PROPERTY_FAILURE:
