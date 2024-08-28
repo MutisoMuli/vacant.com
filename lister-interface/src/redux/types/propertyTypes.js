@@ -1,3 +1,4 @@
+//propertyTypes.js
 export const ADD_PROPERTY = 'ADD_PROPERTY';
 export const ADD_PROPERTY_SUCCESS = 'ADD_PROPERTY_SUCCESS';
 export const ADD_PROPERTY_FAILURE = 'ADD_PROPERTY_FAILURE';
