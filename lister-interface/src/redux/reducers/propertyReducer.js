@@ -1,3 +1,4 @@
+//propertyReducers.js
 import {
   ADD_PROPERTY,
   ADD_PROPERTY_SUCCESS,
