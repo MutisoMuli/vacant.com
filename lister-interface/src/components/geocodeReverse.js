@@ -1,4 +1,4 @@
-// src/components/geocodeReverse.js
+// src components geocodeReverse.js
 export async function geocodeReverse(latitude, longitude) {
     const mapboxToken = 'pk.eyJ1IjoiYW50b211bGkiLCJhIjoiY2x6djVkeHloMDN6NTJtczJzejZwYml1ciJ9.AXoIJyK2JC9PoSKgZOPTkA';
     
