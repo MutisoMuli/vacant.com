@@ -1,4 +1,4 @@
-// src/components/MapComponent.js
+// src components MapComponent.js
 import React, { useState, useEffect } from 'react';
 import Map, { Marker, NavigationControl, GeolocateControl } from 'react-map-gl';
 import { geocodeReverse } from './geocodeReverse';
