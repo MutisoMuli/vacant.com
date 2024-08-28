@@ -1,4 +1,4 @@
-// src/redux/reducers/propertyReducer.js
+// src redux reducers propertyReducer.js
 import {
     FETCH_PROPERTIES_REQUEST,
     FETCH_PROPERTIES_SUCCESS,
